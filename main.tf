@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "my-unique-bucket-name"  # Replace with a unique name
+  bucket = "terraform-test-bucket"  # Replace with a unique name
 }
 
 resource "aws_s3_bucket_acl" "my_bucket_acl" {
