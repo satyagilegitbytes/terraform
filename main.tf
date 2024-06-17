@@ -5,7 +5,8 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "02-terraform-test-bucket"
+  bucket = "${var.bucket_name_prefix}-terraform-test-bucket"
+  force_destroy = true # Enables force deletion of the bucket for testing
 
   tags = {
     Name        = "My S3 Bucket"
@@ -13,9 +14,13 @@ resource "aws_s3_bucket" "my_bucket" {
   }
 }
 
-# This example assumes public read access for testing purposes; adjust as needed
+resource "aws_s3_bucket_acl" "my_bucket_acl" {
+  bucket = aws_s3_bucket.my_bucket.bucket
+  acl    = "private"
+}
+
 resource "aws_s3_bucket_policy" "my_bucket_policy" {
-  bucket = aws_s3_bucket.my_bucket.id
+  bucket = aws_s3_bucket.my_bucket.bucket
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -38,7 +43,7 @@ resource "aws_cloudfront_distribution" "my_distribution" {
 
   enabled             = true
   is_ipv6_enabled     = true
-  default_root_object = ""  # Empty if there's no default object
+  default_root_object = ""
 
   default_cache_behavior {
     target_origin_id       = aws_s3_bucket.my_bucket.id
@@ -61,7 +66,7 @@ resource "aws_cloudfront_distribution" "my_distribution" {
 
   restrictions {
     geo_restriction {
-      restriction_type = "none"  # No geo restrictions
+      restriction_type = "none"
     }
   }
 
@@ -75,7 +80,7 @@ resource "aws_cloudfront_distribution" "my_distribution" {
 }
 
 variable "bucket_name_prefix" {
-  default = "01"  # Replace with a unique prefix
+  default = "02"  # Replace with a unique prefix
 }
 
 output "cdn_url" {
