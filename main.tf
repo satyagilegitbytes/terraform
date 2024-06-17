@@ -1,16 +1,33 @@
 # main.tf
 
 provider "aws" {
-  region = "ap-southeast-1"  # Set to your desired AWS region
+  region = "ap-southeast-1"
 }
 
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "01-terraform-test-bucket"  # Replace with a unique name
+  bucket = "02-terraform-test-bucket"
+
+  tags = {
+    Name        = "My S3 Bucket"
+    Environment = "Test"
+  }
 }
 
-resource "aws_s3_bucket_acl" "my_bucket_acl" {
+# This example assumes public read access for testing purposes; adjust as needed
+resource "aws_s3_bucket_policy" "my_bucket_policy" {
   bucket = aws_s3_bucket.my_bucket.id
-  acl    = "private"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = "s3:GetObject"
+        Resource = "${aws_s3_bucket.my_bucket.arn}/*"
+      }
+    ]
+  })
 }
 
 resource "aws_cloudfront_distribution" "my_distribution" {
@@ -42,17 +59,23 @@ resource "aws_cloudfront_distribution" "my_distribution" {
     max_ttl                = 86400
   }
 
-  price_class = "PriceClass_100"
-
-  viewer_certificate {
-    cloudfront_default_certificate = true
-  }
-
   restrictions {
     geo_restriction {
       restriction_type = "none"  # No geo restrictions
     }
   }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Name = "My CloudFront Distribution"
+  }
+}
+
+variable "bucket_name_prefix" {
+  default = "01"  # Replace with a unique prefix
 }
 
 output "cdn_url" {
