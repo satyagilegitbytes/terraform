@@ -1,11 +1,11 @@
 # main.tf
 
 provider "aws" {
-  region = "ap-southeast-1"  # Ensure this is set to a valid AWS region
+  region = "ap-southeast-1"  # Set to your desired AWS region
 }
 
 resource "aws_s3_bucket" "my_bucket" {
-  bucket = "terraform-test-bucket"  # Replace with a unique name
+  bucket = "my-unique-bucket-name"  # Replace with a unique name
 }
 
 resource "aws_s3_bucket_acl" "my_bucket_acl" {
@@ -21,7 +21,7 @@ resource "aws_cloudfront_distribution" "my_distribution" {
 
   enabled             = true
   is_ipv6_enabled     = true
-  default_root_object = ""
+  default_root_object = ""  # Empty if there's no default object
 
   default_cache_behavior {
     target_origin_id       = aws_s3_bucket.my_bucket.id
@@ -46,6 +46,12 @@ resource "aws_cloudfront_distribution" "my_distribution" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"  # No geo restrictions
+    }
   }
 }
 
