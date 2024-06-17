@@ -1,27 +1,23 @@
 # main.tf
 
 provider "aws" {
-  region = "ap-southeast-1"  # Use the region specified in your Jenkins environment
+  region = "ap-southeast-1"  # Adjust as necessary
 }
 
-variable "user_id" {}
-variable "game_id" {}
-
-resource "aws_s3_bucket" "game_bucket" {
-  bucket = "game-build-bucket-${var.user_id}-${var.game_id}"
-  acl    = "public-read"
+variable "bucket_name" {
+  description = "The name of the existing S3 bucket"
 }
 
-resource "aws_s3_bucket_object" "game_build" {
-  bucket = aws_s3_bucket.game_bucket.bucket
-  key    = "game-build.zip"
-  source = "game-build.zip"  # This should be the path to the actual build file
+variable "origin_path" {
+  description = "Path in the S3 bucket (optional)"
+  default     = ""
 }
 
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
-    domain_name = aws_s3_bucket.game_bucket.bucket_regional_domain_name
-    origin_id   = "${var.user_id}-${var.game_id}"
+    domain_name = "${var.bucket_name}.s3.amazonaws.com"
+    origin_id   = "${var.bucket_name}-origin"
+    origin_path = var.origin_path
 
     s3_origin_config {
       origin_access_identity = "origin-access-identity/cloudfront/EXAMPLE"
@@ -35,7 +31,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${var.user_id}-${var.game_id}"
+    target_origin_id = "${var.bucket_name}-origin"
 
     forwarded_values {
       query_string = false
